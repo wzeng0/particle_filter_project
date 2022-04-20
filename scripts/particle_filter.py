@@ -33,12 +33,11 @@ def get_yaw_from_pose(p):
     return yaw
 
 
-def draw_random_sample():
+def draw_random_sample(list, n):
     """ Draws a random sample of n elements from a given list of choices and their specified probabilities.
     We recommend that you fill in this function using random_sample.
     """
-    # TODO
-    return
+    return np.random.random_sample(list, n)
 
 
 class Particle:
@@ -135,7 +134,7 @@ class ParticleFilter:
         # make all the particle weights sum to 1.0
         
         # TODO
-
+        return
 
 
     def publish_particle_cloud(self):
