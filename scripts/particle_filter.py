@@ -271,6 +271,7 @@ class ParticleFilter:
 
         # iterates through the particles in the particle cloud to find the sum of x and
         # y positions of the particles
+        # need to add orientation to this which is what we are having trouble with comprehending
         for i in self.particle_cloud:
             yaw = get_yaw_from_pose(i)
             total_x += i.pose.x
@@ -284,6 +285,8 @@ class ParticleFilter:
 
     
     def update_particle_weights_with_measurement_model(self, data):
+        # need to add sound and orientation
+
         # resamples the existing particles first
         self.resample_particles()
 
@@ -305,8 +308,13 @@ class ParticleFilter:
 
         # based on the how the robot has moved (calculated from its odometry), we'll  move
         # all of the particles correspondingly
+        self.resample_particles()
 
-        # TODO
+        movement_x = self.odom_pose_last_motion_update.x - self.odom_pose.position.x
+        movement_y = self.odom_pose_last_motion_update.y - self.odom_pose.position.y
+        
+        for i in self.particle_cloud:
+            
 
 
 
