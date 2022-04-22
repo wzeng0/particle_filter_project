@@ -183,9 +183,10 @@ class ParticleFilter:
 
 
     def resample_particles(self):
-
-        # TODO
-
+        # resamples cloude using the draw_random_sample function
+        self.particle_cloud = draw_random_sample(self.particle_cloud, self.num_particles)
+        # need to normalize particles after resampling
+        self.normalize_particles()
 
 
     def robot_scan_received(self, data):
