@@ -37,7 +37,17 @@ def draw_random_sample(list, n):
     """ Draws a random sample of n elements from a given list of choices and their specified probabilities.
     We recommend that you fill in this function using random_sample.
     """
-    return np.random.random_sample(list, n)
+    # we want to give the array a corresponding probability value to the element in list
+    prob = []
+    # keeps count of the item in the probability array
+    count = 0
+    # iterates through list to get the probability
+    for i in list:
+        prob[count] = i.w
+        count += 1
+    # gives a random sample given the list and its probability for each item and 
+    # how many items to return
+    return np.random.choice(list, n ,prob)
 
 
 class Particle:
