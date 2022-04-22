@@ -137,9 +137,16 @@ class ParticleFilter:
 
 
     def normalize_particles(self):
-        for i in range(self.num_particles):
-            self.particle_cloud[i].w = 1
-        # TODO
+        # keeps track of the total weight of all the particles
+        total_weight = 0
+        # calculating the total weight by adding the weights of
+        # all the particles in the particle cloud
+        for i in self.particle_cloud:
+            total_weight += i.w
+         
+        # normalizing the total weight to make sure that all the weights add up to 1
+        for j in self.particle_cloud:
+            j.w = j.w/total_weight
 
 
     def publish_particle_cloud(self):
