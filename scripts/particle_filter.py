@@ -132,9 +132,8 @@ class ParticleFilter:
 
     def normalize_particles(self):
         # make all the particle weights sum to 1.0
-        
+        self.w = 1
         # TODO
-        return
 
 
     def publish_particle_cloud(self):
