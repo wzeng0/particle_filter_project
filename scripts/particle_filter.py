@@ -121,8 +121,14 @@ class ParticleFilter:
     
 
     def initialize_particle_cloud(self):
-        
-        # TODO
+        # Gets a random position for the particle
+        pose = Pose(np.random.randint(), np.random.randint())
+
+        for i in range(self.num_particles):
+            # for every particle in the particle cloud, we want to
+            # initialize the particle to a random position
+            particle = Particle(pose)
+            self.particle_cloud.append(particle)
 
 
         self.normalize_particles()
@@ -131,8 +137,8 @@ class ParticleFilter:
 
 
     def normalize_particles(self):
-        # make all the particle weights sum to 1.0
-        self.w = 1
+        for i in range(self.num_particles):
+            self.particle_cloud[i].w = 1
         # TODO
 
 
