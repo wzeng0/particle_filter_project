@@ -263,17 +263,43 @@ class ParticleFilter:
 
     def update_estimated_robot_pose(self):
         # based on the particles within the particle cloud, update the robot pose estimate
+        # compute average of all particles locations & orientation.
+        self.normalize_particles()
+
+        # find the sum of all the x y coordinates of the particles
+        total_x, total_y = 0, 0
+
+        # iterates through the particles in the particle cloud to find the sum of x and
+        # y positions of the particles
+        for i in self.particle_cloud:
+            yaw = get_yaw_from_pose(i)
+            total_x += i.pose.x
+            total_y += i.pose.y
+        # finding the average of x and y sums and changing the robot_estimated position
+        self.robot_estimate = Pose(total_x/self.num_particles, total_y/self.num_particles)
         
-        # TODO
+        # updating this estimated position
+        self.publish_estimated_robot_pose()
 
 
     
     def update_particle_weights_with_measurement_model(self, data):
+        # resamples the existing particles first
+        self.resample_particles()
 
-        # TODO
+        # keeps track of the diff of the position and orientation of 
+        # laser data and particle positions
+        diff_x, diff_y, orientation = 0, 0, 0
 
-
+        # goes through each particle and finds the difference
+        for i in self.particle_cloud:
+            diff_x = np.abs(data[i].x - i.x)
+            diff_y = np.abs(data[i].y - i.y)
+            orientation = np.abs(data[i].z - i.z)
+            # updates the weights using Monte Carlo Localization Algorithm
+            i.w = 1/(diff_x + diff_y + orientation)
         
+
 
     def update_particles_with_motion_model(self):
 
