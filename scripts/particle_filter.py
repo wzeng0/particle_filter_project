@@ -322,12 +322,22 @@ class ParticleFilter:
         delt_trans = math.sqrt((curr_x - prev_x)**2 + (curr_y - prev_y)**2)
         delt_rot_2 = curr_o - prev_o - delt_rot_1
 
-        for i in self.particle_cloud:
-            # incorporating noise
-            delt_rot_1_noise = delt_rot_1
-            delt_trans_noise = delt_trans
-            delt_rot_2_noise = delt_rot_2
+        # incorporating noise
+        # alpha value
+        a1 = 0.05
+        a2 = 15.0*3.14 / 180.0
+        a3 = 0.05
+        a4 = 0.01
 
+        sample1 = a1*delt_rot_1 + a2*delt_trans
+        sample2 = a3 * delt_trans + a4*(delt_rot_1 + delt_rot_2)
+        sample3 = a1 * delt_rot_2 + a2*delt_trans
+
+        delt_rot_1_noise = delt_rot_1 - np.random.normal(0, sample1**2)
+        delt_trans_noise = delt_trans - np.random.normal(0, sample2**2)
+        delt_rot_2_noise = delt_rot_2 - np.random.normal(0, sample3**2)
+
+        for i in self.particle_cloud:
             # new_position
             i.pose.x = i.pose.x + delt_trans_noise * math.cos(prev_o + delt_rot_1_noise)
             i.pose.y = i.pose.y + delt_trans_noise * math.sin(prev_o + delt_rot_1_noise)
