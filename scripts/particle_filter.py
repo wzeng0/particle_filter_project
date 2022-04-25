@@ -274,7 +274,7 @@ class ParticleFilter:
         for i in self.particle_cloud:
             total_x += i.pose.x
             total_y += i.pose.y
-            
+
         # the yaw using the average total x and y values
         new_yaw = math.atan2(total_y/self.num_particles, total_x/self.num_particles)
 
@@ -309,7 +309,29 @@ class ParticleFilter:
         # based on the how the robot has moved (calculated from its odometry), we'll  move
         # all of the particles correspondingly
 
-        # TODO
+        prev_x = self.odom_pose_last_motion_update.pose.position.x
+        prev_y = self.odom_pose_last_motion_update.pose.position.y
+        prev_o = self.odom_pose_last_motion_update.pose.position.z
+
+        curr_x = self.odom_pose.pose.position.x
+        curr_y = self.odom_pose.pose.position.y
+        curr_o = self.odom_pose.pose.position.z
+
+        ## ideal cases in odom
+        delt_rot_1 = math.atan2(curr_y - prev_y, curr_x - prev_x) - prev_o
+        delt_trans = math.sqrt((curr_x - prev_x)**2 + (curr_y - prev_y)**2)
+        delt_rot_2 = curr_o - prev_o - delt_rot_1
+
+        for i in self.particle_cloud:
+            # incorporating noise
+            delt_rot_1_noise = delt_rot_1
+            delt_trans_noise = delt_trans
+            delt_rot_2_noise = delt_rot_2
+
+            # new_position
+            i.pose.x = i.pose.x + delt_trans_noise * math.cos(prev_o + delt_rot_1_noise)
+            i.pose.y = i.pose.y + delt_trans_noise * math.sin(prev_o + delt_rot_1_noise)
+            i.pose.z = i.pose.z + delt_rot_1_noise + delt_rot_2_noise
 
 
 
