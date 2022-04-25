@@ -21,3 +21,45 @@ Project Due Date: April 26
 Week 1  (till 04/20) : Record map, Initialize particle cloud, update position of the robots, Calculate importance weights - conduct required tests 
 
 Week 2 (till due date): Resample particles, repeat iterations, update pose, optimize parameters 
+
+## Objective/Goals of the project
+Our goal is to implement algorithms so that our robot can find where it is itself in the environment. We do this by localizintg particles so that they converge towards where the location of the robot is
+
+## High-level description
+We solved robot localization through implementation of algorithms where we used predicted values of robot locations in order to find the robots absolute position.
+
+## Particle filter localization steps
+
+### 1. Initialization of particle cloud
+Code Location:
+Functions/Code Description: 
+
+### 2. Movement model
+Code Location:
+Functions/Code Description: 
+
+### 3. Measurement model
+Code Location:
+Functions/Code Description: 
+
+### 4. Resampling
+Code Location:
+Functions/Code Description: 
+
+### 5. Incorporation of noise
+Code Location:
+Functions/Code Description: 
+
+### 6. Updating estimated robot pose
+Code Location:
+Functions/Code Description: 
+
+### 7. Optimization of parameters.
+Code Location:
+Functions/Code Description: 
+
+## Challenges
+
+## Future Work
+
+## Takeaways
