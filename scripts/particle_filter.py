@@ -272,11 +272,14 @@ class ParticleFilter:
         # iterates through the particles in the particle cloud to find the sum of x and
         # y positions of the particles
         for i in self.particle_cloud:
-            yaw = get_yaw_from_pose(i)
             total_x += i.pose.x
             total_y += i.pose.y
+            
+        # the yaw using the average total x and y values
+        new_yaw = math.atan2(total_y/self.num_particles, total_x/self.num_particles)
+
         # finding the average of x and y sums and changing the robot_estimated position
-        self.robot_estimate = Pose(total_x/self.num_particles, total_y/self.num_particles)
+        self.robot_estimate = Pose(total_x/self.num_particles, total_y/self.num_particles, new_yaw)
         
         # updating this estimated position
         self.publish_estimated_robot_pose()
