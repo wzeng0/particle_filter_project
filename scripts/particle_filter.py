@@ -16,11 +16,13 @@ import numpy as np
 from numpy.random import random_sample
 import math
 
+# import random
 from random import randint, random
 
 
 # The size of the world
 world_size = 385
+# world_size = 1/10
 
 def get_yaw_from_pose(p):
     """ A helper function that takes in a Pose object (geometry_msgs) and returns yaw"""
@@ -41,12 +43,9 @@ def draw_random_sample(list, n):
     """
     # we want to give the array a corresponding probability value to the element in list
     prob = []
-    # keeps count of the item in the probability array
-    count = 0
     # iterates through list to get the probability
     for i in list:
-        prob[count] = i.w
-        count += 1
+        prob.append(i.w)
     # gives a random sample given the list and its probability for each item and 
     # how many items to return
     return np.random.choice(list, n ,prob)
@@ -86,7 +85,7 @@ class ParticleFilter:
         self.map = OccupancyGrid()
 
         # the number of particles used in the particle filter
-        self.num_particles = 10000
+        self.num_particles = 20
 
         # initialize the particle cloud array
         self.particle_cloud = []
@@ -137,7 +136,8 @@ class ParticleFilter:
         for i in range(self.num_particles):
             # Gets a random position for the particle
             # scales the integer by size of the world
-            pose = Point(np.random.randint(-60, 5) * world_size, np.random.randint(-50, 10) * world_size, 0)
+            pose = Point(np.random.randint(-60, 5), np.random.randint(-50, 10), 0)
+            # pose = Point(np.random.randint(-60, 5) * world_size, np.random.randint(-50, 10) * world_size, 0)
             # gets a random quaternion value array
             quant = quaternion_from_euler(0, 0, random()*2*math.pi)
             # for every particle in the particle cloud, we want to
@@ -147,6 +147,7 @@ class ParticleFilter:
             particle.pose.orientation = Quaternion(quant[0], quant[1], quant[2], quant[3])
             # appends the new particle to the cloud
             self.particle_cloud.append(particle)
+            print("x-cor: ", particle.pose.position.x)
 
         self.normalize_particles()
 
@@ -312,6 +313,7 @@ class ParticleFilter:
             orientation = np.abs(data[i].pose.orientation.z - i.pose.orientation.z)
             # updates the weights using Monte Carlo Localization Algorithm
             i.w = 1/(diff_x + diff_y + orientation)
+            print(i.w)
         
 
 
