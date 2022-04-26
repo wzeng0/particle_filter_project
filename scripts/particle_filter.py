@@ -279,15 +279,17 @@ class ParticleFilter:
         # iterates through the particles in the particle cloud to find the sum of x and
         # y positions of the particles
         for i in self.particle_cloud:
-            total_x += i.pose.x
-            total_y += i.pose.y
-
+            # updates the position of particles
+            total_x += i.pose.position.x
+            total_y += i.pose.position.y
+        
         # the yaw using the average total x and y values
         new_yaw = math.atan2(total_y/self.num_particles, total_x/self.num_particles)
-
-        # finding the average of x and y sums and changing the robot_estimated position
-        self.robot_estimate = Pose(total_x/self.num_particles, total_y/self.num_particles, new_yaw)
         
+        # finding the average of x and y sums and changing the robot_estimated position
+        self.robot_estimate.position = Pose(total_x/self.num_particles, total_y/self.num_particles, new_yaw)
+        self.robot_estimate.orientation = new_yaw
+
         # updating this estimated position
         self.publish_estimated_robot_pose()
 
@@ -305,9 +307,9 @@ class ParticleFilter:
 
         # goes through each particle and finds the difference
         for i in self.particle_cloud:
-            diff_x = np.abs(data[i].x - i.x)
-            diff_y = np.abs(data[i].y - i.y)
-            orientation = np.abs(data[i].z - i.z)
+            diff_x = np.abs(data[i].pose.position.x - i.pose.position.x)
+            diff_y = np.abs(data[i].pose.position.y - i.pose.position.y)
+            orientation = np.abs(data[i].pose.orientation.z - i.pose.orientation.z)
             # updates the weights using Monte Carlo Localization Algorithm
             i.w = 1/(diff_x + diff_y + orientation)
         
@@ -349,9 +351,9 @@ class ParticleFilter:
 
         for i in self.particle_cloud:
             # new_position
-            i.pose.x = i.pose.x + delt_trans_noise * math.cos(prev_o + delt_rot_1_noise)
-            i.pose.y = i.pose.y + delt_trans_noise * math.sin(prev_o + delt_rot_1_noise)
-            i.pose.z = i.pose.z + delt_rot_1_noise + delt_rot_2_noise
+            i.pose.position.x = i.pose.position.x + delt_trans_noise * math.cos(prev_o + delt_rot_1_noise)
+            i.pose.position.y = i.pose.position.y + delt_trans_noise * math.sin(prev_o + delt_rot_1_noise)
+            i.pose.position.z = i.pose.position.z + delt_rot_1_noise + delt_rot_2_noise
 
 
 
