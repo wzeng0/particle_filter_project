@@ -353,7 +353,10 @@ class ParticleFilter:
             # new_position
             i.pose.position.x = i.pose.position.x + delt_trans_noise * math.cos(prev_o + delt_rot_1_noise)
             i.pose.position.y = i.pose.position.y + delt_trans_noise * math.sin(prev_o + delt_rot_1_noise)
-            i.pose.position.z = i.pose.position.z + delt_rot_1_noise + delt_rot_2_noise
+            quant = quaternion_from_euler(0, 0, i.pose.orientation.z + delt_rot_1_noise + delt_rot_2_noise)
+            # for every particle in the particle cloud, we want to
+            # initialize the particle to a random position
+            i.pose.orientation = Quaternion(quant[0], quant[1], quant[2], quant[3])
 
 
 
