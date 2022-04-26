@@ -13,7 +13,7 @@ from tf import TransformBroadcaster
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
 import numpy as np
-from numpy.random import random_sample
+from numpy.random import random_sample, uniform
 import math
 
 # import random
@@ -21,8 +21,8 @@ from random import randint, random
 
 
 # The size of the world
-world_size = 385
-# world_size = 1/10
+# world_size = 385
+world_size = 1
 
 def get_yaw_from_pose(p):
     """ A helper function that takes in a Pose object (geometry_msgs) and returns yaw"""
@@ -37,18 +37,18 @@ def get_yaw_from_pose(p):
     return yaw
 
 
-def draw_random_sample(list, n):
+def draw_random_sample(array, n):
     """ Draws a random sample of n elements from a given list of choices and their specified probabilities.
     We recommend that you fill in this function using random_sample.
     """
     # we want to give the array a corresponding probability value to the element in list
     prob = []
-    # iterates through list to get the probability
-    for i in list:
+    # iterates through array to get the probability
+    for i in array:
         prob.append(i.w)
     # gives a random sample given the list and its probability for each item and 
     # how many items to return
-    return np.random.choice(list, n ,prob)
+    return np.random.choice(array, n ,prob)
 
 
 class Particle:
@@ -85,10 +85,10 @@ class ParticleFilter:
         self.map = OccupancyGrid()
 
         # the number of particles used in the particle filter
-        self.num_particles = 20
+        self.num_particles = 1000
 
         # initialize the particle cloud array
-        self.particle_cloud = []
+        self.particle_cloud = np.empty(0)
 
         # initialize the estimated robot pose
         self.robot_estimate = Pose()
@@ -118,6 +118,7 @@ class ParticleFilter:
         self.tf_listener = TransformListener()
         self.tf_broadcaster = TransformBroadcaster()
 
+        rospy.sleep(1)
 
         # intialize the particle cloud
         self.initialize_particle_cloud()
@@ -132,11 +133,11 @@ class ParticleFilter:
     
 
     def initialize_particle_cloud(self):
-
+        temp_list = []
         for i in range(self.num_particles):
             # Gets a random position for the particle
             # scales the integer by size of the world
-            pose = Point(np.random.randint(-60, 5), np.random.randint(-50, 10), 0)
+            pose = Point(np.random.uniform(-1, 3) * world_size, np.random.uniform(-1, 3) * world_size, 0)
             # pose = Point(np.random.randint(-60, 5) * world_size, np.random.randint(-50, 10) * world_size, 0)
             # gets a random quaternion value array
             quant = quaternion_from_euler(0, 0, random()*2*math.pi)
@@ -146,8 +147,9 @@ class ParticleFilter:
             particle.pose.position = pose
             particle.pose.orientation = Quaternion(quant[0], quant[1], quant[2], quant[3])
             # appends the new particle to the cloud
-            self.particle_cloud.append(particle)
-            print("x-cor: ", particle.pose.position.x)
+            temp_list.append(particle)
+        self.particle_cloud = np.array(temp_list)
+
 
         self.normalize_particles()
 
@@ -175,7 +177,6 @@ class ParticleFilter:
 
         for part in self.particle_cloud:
             particle_cloud_pose_array.poses.append(part.pose)
-
         self.particles_pub.publish(particle_cloud_pose_array)
 
 
@@ -234,8 +235,8 @@ class ParticleFilter:
             self.odom_pose_last_motion_update = self.odom_pose
             return
 
-
-        if self.particle_cloud:
+        # print("before checking any")
+        if np.any(self.particle_cloud):
 
             # check to see if we've moved far enough to perform an update
 
@@ -245,15 +246,18 @@ class ParticleFilter:
             old_y = self.odom_pose_last_motion_update.pose.position.y
             curr_yaw = get_yaw_from_pose(self.odom_pose.pose)
             old_yaw = get_yaw_from_pose(self.odom_pose_last_motion_update.pose)
-
+            # print("outside the first if statement")
+            print("curr_x: ", curr_x)
+            print("old_x: ", old_x)
+            print("curr_y: ", curr_y)
+            print("old_y: ", old_y)
             if (np.abs(curr_x - old_x) > self.lin_mvmt_threshold or 
                 np.abs(curr_y - old_y) > self.lin_mvmt_threshold or
                 np.abs(curr_yaw - old_yaw) > self.ang_mvmt_threshold):
-
                 # This is where the main logic of the particle filter is carried out
-
+                print("before motion")
                 self.update_particles_with_motion_model()
-
+                print("before measurement call")
                 self.update_particle_weights_with_measurement_model(data)
 
                 self.normalize_particles()
@@ -297,11 +301,22 @@ class ParticleFilter:
 
     
     def update_particle_weights_with_measurement_model(self, data):
-        # need to add sound and orientation
-
         # resamples the existing particles first
         self.resample_particles()
 
+        closest_obstacle = -1
+        smallest_dist = 100
+
+        for x in range(360):
+            if (data.ranges[x] < smallest_dist) and (data.ranges[x] != 0):
+                smallest_dist = data.ranges[x]
+                closest_obstacle = x
+
+        if (closest_obstacle == -1):
+            self.twist.angular.z = 0
+            self.twist.linear.x = 0
+        
+        print("before for loop")
         # keeps track of the diff of the position and orientation of 
         # laser data and particle positions
         diff_x, diff_y, orientation = 0, 0, 0
@@ -311,6 +326,8 @@ class ParticleFilter:
             diff_x = np.abs(data[i].pose.position.x - i.pose.position.x)
             diff_y = np.abs(data[i].pose.position.y - i.pose.position.y)
             orientation = np.abs(data[i].pose.orientation.z - i.pose.orientation.z)
+            print(diff_x)
+            print(diff_y)
             # updates the weights using Monte Carlo Localization Algorithm
             i.w = 1/(diff_x + diff_y + orientation)
             print(i.w)
