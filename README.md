@@ -36,32 +36,31 @@ Week 2 (till due date): Resample particles, repeat iterations, update pose, opti
 ## For each of the main steps of the particle filter localization, please provide the following:
 
 ### Initialization of particle cloud:
-Location: initialize_particle_cloud
-Code description: For each particle in our total number of particles, we assign a random position and a random orientation. 
-We then append this particle to the cloud. 
+ * Location: initialize_particle_cloud
+ * Code description: For each particle in our total number of particles, we assign a random position and a random orientation. We then append this particle to the cloud. 
 ### Normalize particles:
-Location: normalize_particles
-Description: In order to make the weights add up to 1, we divide each weight by the total weight 
+ * Location: normalize_particles
+ * Description: In order to make the weights add up to 1, we divide each weight by the total weight 
 ### Movement model:
-Location: update_particles_with_motion_model:
-Description: Here we used the algorithm Sarah provided
-We first found how much the robot has moved ahead by finding the deltas. 
-We then add some noise and move the particles ahead by the same amount. 
+ * Location: update_particles_with_motion_model:
+ * Description: Here we used the algorithm Sarah provided
+   * We first found how much the robot has moved ahead by finding the deltas. 
+   * We then add some noise and move the particles ahead by the same amount. 
 ### Measurement model:
-Location: update_particle_weights_with_measurement_model
-Description: 
-Here we updated the weights using the monte carlo localization we learnt in class. 
+ * Location: update_particle_weights_with_measurement_model
+ * Description: Here we updated the weights using the monte carlo localization we learnt in class. 
 ### Resampling:
-Location: Resample_particles and draw_random_sample helper function
-Description: In this, we drew a random sample from our weighted list of the particle positions and their weights 
+ * Location: Resample_particles and draw_random_sample helper function
+ * Description: In this, we drew a random sample from our weighted list of the particle positions and their weights 
 ### Incorporation of noise:
-Location: In the update_particles_with_motion_model function
-Description: we included noise by estimating the alpha values proportionally to the robot’s position 
+ * Location: In the update_particles_with_motion_model function
+ * Description: we included noise by estimating the alpha values proportionally to the robot’s position 
 ### Updating estimated robot pose:
-Location: update_estimated_robot_pose 
-Description: For each particle, we add up the x and y positions in order to find the sample average
-We use the average x and y to create the average yaw using tan inverse.
-We then return the average position consisting of the average x and y and the average orientation consisting of the quaternion from the new yaw
+ * Location: update_estimated_robot_pose 
+ * Description: For each particle, we add up the x and y positions in order to find the sample average
+  * We use the average x and y to create the average yaw using tan inverse.
+  * We then return the average position consisting of the average x and y and the average orientation consisting of the quaternion from the new yaw
+
 ### Optimization of parameters:
 Tweaking the alpha values in the incorporation of noise was done to optimize the parameters
 We also tweaked the number of particles to optimize our parameters 
