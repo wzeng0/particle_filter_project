@@ -19,6 +19,8 @@ import math
 from random import randint, random
 
 
+# The size of the world
+world_size = 385
 
 def get_yaw_from_pose(p):
     """ A helper function that takes in a Pose object (geometry_msgs) and returns yaw"""
@@ -131,15 +133,20 @@ class ParticleFilter:
     
 
     def initialize_particle_cloud(self):
-        # Gets a random position for the particle
-        pose = Pose(np.random.randint(), np.random.randint())
 
         for i in range(self.num_particles):
+            # Gets a random position for the particle
+            # scales the integer by size of the world
+            pose = Point(np.random.randint(-60, 5) * world_size, np.random.randint(-50, 10) * world_size, 0)
+            # gets a random quaternion value array
+            quant = quaternion_from_euler(0, 0, random()*2*math.pi)
             # for every particle in the particle cloud, we want to
             # initialize the particle to a random position
-            particle = Particle(pose)
+            particle = Particle(Pose(), 1)
+            particle.pose.position = pose
+            particle.pose.orientation = Quaternion(quant[0], quant[1], quant[2], quant[3])
+            # appends the new particle to the cloud
             self.particle_cloud.append(particle)
-
 
         self.normalize_particles()
 
@@ -271,7 +278,6 @@ class ParticleFilter:
 
         # iterates through the particles in the particle cloud to find the sum of x and
         # y positions of the particles
-        # need to add orientation to this which is what we are having trouble with comprehending
         for i in self.particle_cloud:
             total_x += i.pose.x
             total_y += i.pose.y
