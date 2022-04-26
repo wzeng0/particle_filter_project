@@ -304,6 +304,7 @@ class ParticleFilter:
         # resamples the existing particles first
         self.resample_particles()
 
+        # Finds the closest obstacle using sensor readings
         closest_obstacle = -1
         smallest_dist = 100
 
@@ -315,22 +316,28 @@ class ParticleFilter:
         if (closest_obstacle == -1):
             self.twist.angular.z = 0
             self.twist.linear.x = 0
-        
-        print("before for loop")
-        # keeps track of the diff of the position and orientation of 
-        # laser data and particle positions
-        diff_x, diff_y, orientation = 0, 0, 0
 
-        # goes through each particle and finds the difference
+        # liklihood field model
+        q = 1
         for i in self.particle_cloud:
-            diff_x = np.abs(data[i].pose.position.x - i.pose.position.x)
-            diff_y = np.abs(data[i].pose.position.y - i.pose.position.y)
-            orientation = np.abs(data[i].pose.orientation.z - i.pose.orientation.z)
-            print(diff_x)
-            print(diff_y)
-            # updates the weights using Monte Carlo Localization Algorithm
-            i.w = 1/(diff_x + diff_y + orientation)
-            print(i.w)
+            for k in 360:
+                if (data.ranges[k] != 100):
+                    i.pose.position.x = 
+        
+        # # keeps track of the diff of the position and orientation of 
+        # # laser data and particle positions
+        # diff_x, diff_y, orientation = 0, 0, 0
+
+        # # goes through each particle and finds the difference
+        # for i in self.particle_cloud:
+        #     diff_x = np.abs(data[i].pose.position.x - i.pose.position.x)
+        #     diff_y = np.abs(data[i].pose.position.y - i.pose.position.y)
+        #     orientation = np.abs(data[i].pose.orientation.z - i.pose.orientation.z)
+        #     print(diff_x)
+        #     print(diff_y)
+        #     # updates the weights using Monte Carlo Localization Algorithm
+        #     i.w = 1/(diff_x + diff_y + orientation)
+        #     print(i.w)
         
 
 
