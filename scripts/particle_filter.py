@@ -164,6 +164,7 @@ class ParticleFilter:
         # keeps track of the total weight of all the particles
         total_weight = 0
         new_cloud = []
+        # if weight is 0 for a particle, then take it out of the cloud
         for k in self.particle_cloud:
             if (k.w != 0):
                 new_cloud.append(k)
@@ -313,11 +314,16 @@ class ParticleFilter:
         # liklihood field model
         for i in self.particle_cloud:
             q = 1
+            # position of particle
             x = i.pose.position.x
             y = i.pose.position.y
+            # static variable
             K = 10
+            # orientation of the particles
             orientation = get_yaw_from_pose(i.pose)
             for k in range(K):
+                # implementing likelihood field
+                # Following algorithm for likelihood field
                 z_tk = data.ranges[k]
                 if (z_tk != 0):
                     if (z_tk > 2):
@@ -326,6 +332,8 @@ class ParticleFilter:
                 y_z = y + z_tk*math.sin(orientation + math.radians((360/K)*k))
                 dist = self.field.get_closest_obstacle_distance(x_z, y_z)
                 q = q * compute_prob_zero_centered_gaussian(dist, .1)
+            # accounting for nan
+            # sets q to weight
             if (q == np.nan):
                 i.w = 1/self.num_particles
             else:
@@ -372,16 +380,12 @@ class ParticleFilter:
             # new_position
             i.pose.position.x = i.pose.position.x + delt_trans_noise * math.cos(prev_o + delt_rot_1_noise)
             i.pose.position.y = i.pose.position.y + delt_trans_noise * math.sin(prev_o + delt_rot_1_noise)
+            # if particles are going off the map then place them in a random position on the map
             if ((i.pose.position.x > self.map.info.width) or (i.pose.position.y > self.map.info.height) or 
                     (i.pose.position.x < 0) or (i.pose.position.y < 0)):
                 i.pose.position.x = np.random.uniform(0, 2) * world_size
                 i.pose.position.y = np.random.uniform(0, 2) * world_size
             quant = quaternion_from_euler(0, 0, i.pose.orientation.z + delt_rot_1_noise + delt_rot_2_noise)
-            # i.pose.position.x = i.pose.position.x + delt_trans_noise * math.cos(prev_o + delt_rot_1_noise)
-            # i.pose.position.y = i.pose.position.y + delt_trans_noise * math.sin(prev_o + delt_rot_1_noise)
-            # quant = quaternion_from_euler(0, 0, i.pose.orientation.z + delt_rot_1_noise + delt_rot_2_noise)
-            # for every particle in the particle cloud, we want to
-            # initialize the particle to a random position
             i.pose.orientation = Quaternion(quant[0], quant[1], quant[2], quant[3])
 
 
