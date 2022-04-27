@@ -163,14 +163,22 @@ class ParticleFilter:
     def normalize_particles(self):
         # keeps track of the total weight of all the particles
         total_weight = 0
+        new_cloud = []
+        for k in self.particle_cloud:
+            if (k.w != 0):
+                new_cloud.append(k)
+        self.particle_cloud = np.array(new_cloud)
         # calculating the total weight by adding the weights of
         # all the particles in the particle cloud
         for i in self.particle_cloud:
             total_weight += i.w
-        print("total weight: ", total_weight)
         # normalizing the total weight to make sure that all the weights add up to 1
         for j in self.particle_cloud:
-            j.w = j.w/total_weight
+            if (total_weight == 0):
+                j.w = 1/self.num_particles
+            else:
+                j.w = j.w/total_weight
+        
 
 
     def publish_particle_cloud(self):
@@ -200,6 +208,7 @@ class ParticleFilter:
         self.particle_cloud = draw_random_sample(self.particle_cloud, self.num_particles)
         # need to normalize particles after resampling
         self.normalize_particles()
+        self.publish_particle_cloud()
 
 
     def robot_scan_received(self, data):
@@ -254,7 +263,6 @@ class ParticleFilter:
                 np.abs(curr_y - old_y) > self.lin_mvmt_threshold or
                 np.abs(curr_yaw - old_yaw) > self.ang_mvmt_threshold):
                 # This is where the main logic of the particle filter is carried out
-                print("before motion")
                 self.update_particles_with_motion_model()
                 print("before measurement call")
                 self.update_particle_weights_with_measurement_model(data)
@@ -289,11 +297,10 @@ class ParticleFilter:
         
         # the yaw using the average total x and y values
         new_yaw = math.atan2(total_y/self.num_particles, total_x/self.num_particles)
-        
+        quant = quaternion_from_euler(0, 0, new_yaw)
         # finding the average of x and y sums and changing the robot_estimated position
-        self.robot_estimate.position = Pose(total_x/self.num_particles, total_y/self.num_particles, new_yaw)
-        self.robot_estimate.orientation = new_yaw
-
+        self.robot_estimate.position = Point(total_x/self.num_particles, total_y/self.num_particles, 0)
+        self.robot_estimate.orientation = Quaternion(quant[0], quant[1], quant[2], quant[3])
         # updating this estimated position
         self.publish_estimated_robot_pose()
 
@@ -308,37 +315,20 @@ class ParticleFilter:
             q = 1
             x = i.pose.position.x
             y = i.pose.position.y
+            K = 10
             orientation = get_yaw_from_pose(i.pose)
-            for k in range(360):
+            for k in range(K):
                 z_tk = data.ranges[k]
-                x_z = x + z_tk*math.cos(orientation)
-                y_z = y + z_tk*math.sin(orientation)
+                if (z_tk != 0):
+                    if (z_tk > 2):
+                        z_tk = 2
+                x_z = x + z_tk*math.cos(orientation + math.radians((360/K)*k))
+                y_z = y + z_tk*math.sin(orientation + math.radians((360/K)*k))
                 dist = self.field.get_closest_obstacle_distance(x_z, y_z)
                 q = q * compute_prob_zero_centered_gaussian(dist, .1)
-                # print("x: ", x_z)
-                # print("y: ", y_z)
-                # print("dist: ", dist)
-            if np.isnan(q):
-                q = 0
-            print("q: ", q)
             i.w = q
 
             print("weight: ", i.w)
-        
-        # # keeps track of the diff of the position and orientation of 
-        # # laser data and particle positions
-        # diff_x, diff_y, orientation = 0, 0, 0
-
-        # # goes through each particle and finds the difference
-        # for i in self.particle_cloud:
-        #     diff_x = np.abs(data[i].pose.position.x - i.pose.position.x)
-        #     diff_y = np.abs(data[i].pose.position.y - i.pose.position.y)
-        #     orientation = np.abs(data[i].pose.orientation.z - i.pose.orientation.z)
-        #     print(diff_x)
-        #     print(diff_y)
-        #     # updates the weights using Monte Carlo Localization Algorithm
-        #     i.w = 1/(diff_x + diff_y + orientation)
-        #     print(i.w)
         
 
 
@@ -350,11 +340,11 @@ class ParticleFilter:
 
         prev_x = self.odom_pose_last_motion_update.pose.position.x
         prev_y = self.odom_pose_last_motion_update.pose.position.y
-        prev_o = self.odom_pose_last_motion_update.pose.position.z
+        prev_o = get_yaw_from_pose(self.odom_pose_last_motion_update.pose)
 
         curr_x = self.odom_pose.pose.position.x
         curr_y = self.odom_pose.pose.position.y
-        curr_o = self.odom_pose.pose.position.z
+        curr_o = get_yaw_from_pose(self.odom_pose.pose)
 
         ## ideal cases in odom
         delt_rot_1 = math.atan2(curr_y - prev_y, curr_x - prev_x) - prev_o
@@ -378,13 +368,19 @@ class ParticleFilter:
 
         for i in self.particle_cloud:
             # new_position
-            i.pose.position.x = i.pose.position.x + delt_trans_noise * math.cos(prev_o + delt_rot_1_noise)
-            i.pose.position.y = i.pose.position.y + delt_trans_noise * math.sin(prev_o + delt_rot_1_noise)
+            i.pose.position.x = i.pose.position.x + delt_trans_noise
+            i.pose.position.y = i.pose.position.y + delt_trans_noise
+            if ((i.pose.position.x > self.map.info.width) or (i.pose.position.y > self.map.info.width) or 
+                    (i.pose.position.x < 0) or (i.pose.position.y < 0)):
+                i.pose.position.x = np.random.uniform(-1, 3) * world_size
+                i.pose.position.y = np.random.uniform(-1, 3) * world_size
             quant = quaternion_from_euler(0, 0, i.pose.orientation.z + delt_rot_1_noise + delt_rot_2_noise)
+            # i.pose.position.x = i.pose.position.x + delt_trans_noise * math.cos(prev_o + delt_rot_1_noise)
+            # i.pose.position.y = i.pose.position.y + delt_trans_noise * math.sin(prev_o + delt_rot_1_noise)
+            # quant = quaternion_from_euler(0, 0, i.pose.orientation.z + delt_rot_1_noise + delt_rot_2_noise)
             # for every particle in the particle cloud, we want to
             # initialize the particle to a random position
             i.pose.orientation = Quaternion(quant[0], quant[1], quant[2], quant[3])
-
 
 
 if __name__=="__main__":
