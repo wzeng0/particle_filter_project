@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
+import likelihood_field
 
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Quaternion, Point, Pose, PoseArray, PoseStamped
@@ -304,25 +305,20 @@ class ParticleFilter:
         # resamples the existing particles first
         self.resample_particles()
 
-        # Finds the closest obstacle using sensor readings
-        closest_obstacle = -1
-        smallest_dist = 100
-
-        for x in range(360):
-            if (data.ranges[x] < smallest_dist) and (data.ranges[x] != 0):
-                smallest_dist = data.ranges[x]
-                closest_obstacle = x
-
-        if (closest_obstacle == -1):
-            self.twist.angular.z = 0
-            self.twist.linear.x = 0
-
         # liklihood field model
-        q = 1
         for i in self.particle_cloud:
+            q = 1
+            x = i.pos.position.x
+            y = i.pos.position.y
+            orientation = i.pos.orientation.z
             for k in 360:
-                if (data.ranges[k] != 100):
-                    i.pose.position.x = 
+                z_tk = data.ranges[k]
+                if (data.ranges[k] != math.inf):
+                    x_z = x + z_tk*math.cos(orientation)
+                    y_z = y + z_tk*math.sin(orientation)
+                    dist = likelihood_field.get_closest_obstacle_distance(x_z, y_z)
+                    q = q * likelihood_field.compute_prob_zero_centered_gaussian(dist, .1)
+            i.w = q
         
         # # keeps track of the diff of the position and orientation of 
         # # laser data and particle positions
