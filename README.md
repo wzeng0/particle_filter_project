@@ -47,7 +47,7 @@ Week 2 (till due date): Resample particles, repeat iterations, update pose, opti
    * This finds how much the 
 ### Measurement model:
  * Location: update_particle_weights_with_measurement_model
- * Description: Here we updated the weights using the monte carlo localization we learnt in class. 
+ * Description: Here we updated the weights using the likelihood field model.
 ### Resampling:
  * Location: Resample_particles and draw_random_sample helper function
  * Description: In this, we drew a random sample from our weighted list of the particle positions and their weights 
@@ -65,16 +65,15 @@ Tweaking the alpha values in the incorporation of noise was done to optimize the
 We also tweaked the number of particles to optimize our parameters 
 
 ## Challenges (1 paragraph): Describe the challenges you faced and how you overcame them.
-A challenge we faced was understanding the makeup of the Pose object and understanding that it consists of position and orientation.
-Understanding how quaternions work was also a challenge. 
-Additionally, understanding the algorithm for the motion model was a challenge. 
-We overcame these by interacting with the TAs on slack and reading the linked textbook for the motion model. 
+One challenge we faced was how each particle interacted with the robot position. In order to overcome this, we realize that our understaning of the pose object consisting of position and orientation, quaternions, and motion model was lacking. Therefore, we read more into documentations found in the linked textbook and consulted TAs in order to solve this. 
 
 ## Future work (1 paragraph): If you had more time, how would you improve your particle filter localization?
-We would improve it by optimizing the parameters more. We feel like a lot of the parameters and variables such as alpha values were guess and check. Furthermore, we could've understood the map component of the project better to get the resolution of the environemnt.
+We would improve it by optimizing the parameters more. We feel like a lot of the parameters and variables such as alpha values were guess and check. Furthermore, we could've understood the map component of the project better to get the resolution of the environemnt. In addition, we could have implemented our motion model better. Our particles don't seem to always follow our robots orientation.
 
 ## Takeaways (at least 2 bullet points with 2-3 sentences per bullet point): What are your key takeaways from this project that would help you/others in future robot programming assignments working in pairs? For each takeaway, provide a few sentences of elaboration.
   * Carefully study the parameters to check what information we have.
     * While implementing the functions, although we had the idea down I felt that we misused/misunderstood some variables such as understanding the individual position and orientation parameters of pose.
   * Do more research into quaternion
     * A lot of our questions to slack were how we would implement orientation change which had largely to do with quaternion and I felt like we did not have an understanding of that until later on in the project.
+
+## GIF of our most successful attempt
