@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+from cmath import nan
 import rospy
-import likelihood_field
+from likelihood_field import *
+from measurement_update_likelihood_field import compute_prob_zero_centered_gaussian
 
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Quaternion, Point, Pose, PoseArray, PoseStamped
@@ -22,8 +24,9 @@ from random import randint, random
 
 
 # The size of the world
-# world_size = 385
 world_size = 1
+
+
 
 def get_yaw_from_pose(p):
     """ A helper function that takes in a Pose object (geometry_msgs) and returns yaw"""
@@ -129,8 +132,8 @@ class ParticleFilter:
 
 
     def get_map(self, data):
-
         self.map = data
+        self.field = LikelihoodField()
     
 
     def initialize_particle_cloud(self):
@@ -164,7 +167,7 @@ class ParticleFilter:
         # all the particles in the particle cloud
         for i in self.particle_cloud:
             total_weight += i.w
-         
+        print("total weight: ", total_weight)
         # normalizing the total weight to make sure that all the weights add up to 1
         for j in self.particle_cloud:
             j.w = j.w/total_weight
@@ -247,11 +250,6 @@ class ParticleFilter:
             old_y = self.odom_pose_last_motion_update.pose.position.y
             curr_yaw = get_yaw_from_pose(self.odom_pose.pose)
             old_yaw = get_yaw_from_pose(self.odom_pose_last_motion_update.pose)
-            # print("outside the first if statement")
-            print("curr_x: ", curr_x)
-            print("old_x: ", old_x)
-            print("curr_y: ", curr_y)
-            print("old_y: ", old_y)
             if (np.abs(curr_x - old_x) > self.lin_mvmt_threshold or 
                 np.abs(curr_y - old_y) > self.lin_mvmt_threshold or
                 np.abs(curr_yaw - old_yaw) > self.ang_mvmt_threshold):
@@ -308,17 +306,24 @@ class ParticleFilter:
         # liklihood field model
         for i in self.particle_cloud:
             q = 1
-            x = i.pos.position.x
-            y = i.pos.position.y
-            orientation = i.pos.orientation.z
-            for k in 360:
+            x = i.pose.position.x
+            y = i.pose.position.y
+            orientation = get_yaw_from_pose(i.pose)
+            for k in range(360):
                 z_tk = data.ranges[k]
-                if (data.ranges[k] != math.inf):
-                    x_z = x + z_tk*math.cos(orientation)
-                    y_z = y + z_tk*math.sin(orientation)
-                    dist = likelihood_field.get_closest_obstacle_distance(x_z, y_z)
-                    q = q * likelihood_field.compute_prob_zero_centered_gaussian(dist, .1)
+                x_z = x + z_tk*math.cos(orientation)
+                y_z = y + z_tk*math.sin(orientation)
+                dist = self.field.get_closest_obstacle_distance(x_z, y_z)
+                q = q * compute_prob_zero_centered_gaussian(dist, .1)
+                # print("x: ", x_z)
+                # print("y: ", y_z)
+                # print("dist: ", dist)
+            if np.isnan(q):
+                q = 0
+            print("q: ", q)
             i.w = q
+
+            print("weight: ", i.w)
         
         # # keeps track of the diff of the position and orientation of 
         # # laser data and particle positions
