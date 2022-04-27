@@ -77,3 +77,4 @@ We would improve it by optimizing the parameters more. We feel like a lot of the
     * A lot of our questions to slack were how we would implement orientation change which had largely to do with quaternion and I felt like we did not have an understanding of that until later on in the project.
 
 ## GIF of our most successful attempt
+![particle_filter](IMG-6124.gif)
