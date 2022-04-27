@@ -43,9 +43,8 @@ Week 2 (till due date): Resample particles, repeat iterations, update pose, opti
  * Description: In order to make the weights add up to 1, we divide each weight by the total weight 
 ### Movement model:
  * Location: update_particles_with_motion_model:
- * Description: Here we used the algorithm Sarah provided
-   * We first found how much the robot has moved ahead by finding the deltas. 
-   * We then add some noise and move the particles ahead by the same amount. 
+ * Description: Here, we used the likelihood field model
+   * This finds how much the 
 ### Measurement model:
  * Location: update_particle_weights_with_measurement_model
  * Description: Here we updated the weights using the monte carlo localization we learnt in class. 
@@ -72,7 +71,7 @@ Additionally, understanding the algorithm for the motion model was a challenge.
 We overcame these by interacting with the TAs on slack and reading the linked textbook for the motion model. 
 
 ## Future work (1 paragraph): If you had more time, how would you improve your particle filter localization?
-We would improve it by optimizing the parameters more, and maybe even exploring the likelihood field model since we used the Monte Carlo localization.
+We would improve it by optimizing the parameters more. We feel like a lot of the parameters and variables such as alpha values were guess and check. Furthermore, we could've understood the map component of the project better to get the resolution of the environemnt.
 
 ## Takeaways (at least 2 bullet points with 2-3 sentences per bullet point): What are your key takeaways from this project that would help you/others in future robot programming assignments working in pairs? For each takeaway, provide a few sentences of elaboration.
   * Carefully study the parameters to check what information we have.

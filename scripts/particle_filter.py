@@ -89,7 +89,7 @@ class ParticleFilter:
         self.map = OccupancyGrid()
 
         # the number of particles used in the particle filter
-        self.num_particles = 1000
+        self.num_particles = 50
 
         # initialize the particle cloud array
         self.particle_cloud = np.empty(0)
@@ -141,7 +141,7 @@ class ParticleFilter:
         for i in range(self.num_particles):
             # Gets a random position for the particle
             # scales the integer by size of the world
-            pose = Point(np.random.uniform(-1, 3) * world_size, np.random.uniform(-1, 3) * world_size, 0)
+            pose = Point(np.random.uniform(0, 2) * world_size, np.random.uniform(0, 2) * world_size, 0)
             # pose = Point(np.random.randint(-60, 5) * world_size, np.random.randint(-50, 10) * world_size, 0)
             # gets a random quaternion value array
             quant = quaternion_from_euler(0, 0, random()*2*math.pi)
@@ -264,7 +264,7 @@ class ParticleFilter:
                 np.abs(curr_yaw - old_yaw) > self.ang_mvmt_threshold):
                 # This is where the main logic of the particle filter is carried out
                 self.update_particles_with_motion_model()
-                print("before measurement call")
+
                 self.update_particle_weights_with_measurement_model(data)
 
                 self.normalize_particles()
@@ -326,9 +326,11 @@ class ParticleFilter:
                 y_z = y + z_tk*math.sin(orientation + math.radians((360/K)*k))
                 dist = self.field.get_closest_obstacle_distance(x_z, y_z)
                 q = q * compute_prob_zero_centered_gaussian(dist, .1)
-            i.w = q
+            if (q == np.nan):
+                i.w = 1/self.num_particles
+            else:
+                i.w = q
 
-            print("weight: ", i.w)
         
 
 
@@ -336,7 +338,7 @@ class ParticleFilter:
 
         # based on the how the robot has moved (calculated from its odometry), we'll  move
         # all of the particles correspondingly
-        self.resample_particles()
+        # self.resample_particles()
 
         prev_x = self.odom_pose_last_motion_update.pose.position.x
         prev_y = self.odom_pose_last_motion_update.pose.position.y
@@ -361,19 +363,19 @@ class ParticleFilter:
         sample1 = a1*delt_rot_1 + a2*delt_trans
         sample2 = a3 * delt_trans + a4*(delt_rot_1 + delt_rot_2)
         sample3 = a1 * delt_rot_2 + a2*delt_trans
-
+        
         delt_rot_1_noise = delt_rot_1 - np.random.normal(0, sample1**2)
         delt_trans_noise = delt_trans - np.random.normal(0, sample2**2)
         delt_rot_2_noise = delt_rot_2 - np.random.normal(0, sample3**2)
 
         for i in self.particle_cloud:
             # new_position
-            i.pose.position.x = i.pose.position.x + delt_trans_noise
-            i.pose.position.y = i.pose.position.y + delt_trans_noise
-            if ((i.pose.position.x > self.map.info.width) or (i.pose.position.y > self.map.info.width) or 
+            i.pose.position.x = i.pose.position.x + delt_trans_noise * math.cos(prev_o + delt_rot_1_noise)
+            i.pose.position.y = i.pose.position.y + delt_trans_noise * math.sin(prev_o + delt_rot_1_noise)
+            if ((i.pose.position.x > self.map.info.width) or (i.pose.position.y > self.map.info.height) or 
                     (i.pose.position.x < 0) or (i.pose.position.y < 0)):
-                i.pose.position.x = np.random.uniform(-1, 3) * world_size
-                i.pose.position.y = np.random.uniform(-1, 3) * world_size
+                i.pose.position.x = np.random.uniform(0, 2) * world_size
+                i.pose.position.y = np.random.uniform(0, 2) * world_size
             quant = quaternion_from_euler(0, 0, i.pose.orientation.z + delt_rot_1_noise + delt_rot_2_noise)
             # i.pose.position.x = i.pose.position.x + delt_trans_noise * math.cos(prev_o + delt_rot_1_noise)
             # i.pose.position.y = i.pose.position.y + delt_trans_noise * math.sin(prev_o + delt_rot_1_noise)
